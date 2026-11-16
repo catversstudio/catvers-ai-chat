@@ -217,10 +217,11 @@ const DEF = {
   url: "https://puts-blind-captain-reliable.trycloudflare.com/v1",
   model: "qwen3-8b-abliterated",
   key: "",
-  sys: "",
+  sys: "Tum ek smart aur dost jaisi AI ho. Hamesha Roman Hinglish mein jawab do — Hindi ko Roman script mein likho, Devanagari script bilkul mat use karo. Jawab chhota, simple aur seedha rakho, jaise dost se baat ho rahi ho. Faltu lamba lecture mat do. Agar code manga jaye to sirf code do aur ek line mein samjha do. Agar user English mein likhe to simple English mein jawab do.",
   temp: 0.7
 };
 let cfg = Object.assign({}, DEF, JSON.parse(localStorage.getItem("cvai_cfg") || "{}"));
+if(!cfg.sys) cfg.sys = DEF.sys;
 let chats = JSON.parse(localStorage.getItem("cvai_chats") || "[]");
 let currentId = localStorage.getItem("cvai_current") || null;
 let controller = null, generating = false;
@@ -272,12 +273,9 @@ function splitThink(text){
   return { think: m[1], body: text.replace(/<think>[\s\S]*?(<\/think>|$)/, "") };
 }
 function renderAI(text, streaming){
-  const {think, body} = splitThink(text);
-  let h = "";
-  if(think.trim()) h += '<details class="think"'+(streaming&&!body.trim()?" open":"")+'><summary>💭 Thinking…</summary><div class="t">'+esc(think)+'</div></details>';
-  if(body.trim()) h += md(body);
-  else if(streaming) h += '<span class="typing"><i></i><i></i><i></i></span>';
-  return h;
+  const {body} = splitThink(text);
+  if(body.trim()) return md(body);
+  return streaming ? '<span class="typing"><i></i><i></i><i></i></span>' : "";
 }
 
 /* ================= chat management ================= */
@@ -312,11 +310,11 @@ function msgNode(role, text, streaming){
   let inner = '<div class="avatar">'+av+'</div><div class="bubble">';
   if(role==="user") inner += esc(text).replace(/\n/g,"<br>");
   else inner += renderAI(text, streaming);
-  inner += '<div class="tools">';
-  if(role!=="user") inner += '<button data-act="regen">↻ Regenerate</button>';
-  inner += '<button data-act="copy">⧉ Copy</button></div></div>';
+  if(role!=="user") inner += '<div class="tools"><button data-act="regen">↻ Regenerate</button><button data-act="copy">⧉ Copy</button></div>';
+  inner += '</div>';
   d.innerHTML = inner;
-  d.querySelector('[data-act="copy"]').onclick = () => {
+  const cpBtn = d.querySelector('[data-act="copy"]');
+  if(cpBtn) cpBtn.onclick = () => {
     const c = getChat(); if(!c) return;
     const idx = [...wrap.children].indexOf(d);
     const mm = c.msgs.filter(x=>x.role!=="sys")[idx];
