@@ -273,9 +273,12 @@ function splitThink(text){
   return { think: m[1], body: text.replace(/<think>[\s\S]*?(<\/think>|$)/, "") };
 }
 function renderAI(text, streaming){
-  const {body} = splitThink(text);
-  if(body.trim()) return md(body);
-  return streaming ? '<span class="typing"><i></i><i></i><i></i></span>' : "";
+  const {think, body} = splitThink(text);
+  let h = "";
+  if(think.trim()) h += '<details class="think"><summary>💭 Thinking — dekhna hai to dabao</summary><div class="t">'+esc(think)+'</div></details>';
+  if(body.trim()) h += md(body);
+  else if(streaming) h += '<span class="typing"><i></i><i></i><i></i></span>';
+  return h;
 }
 
 /* ================= chat management ================= */
